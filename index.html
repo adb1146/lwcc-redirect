@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Returning to LWCC Companion…</title>
+</head>
+<body style="font-family:-apple-system,system-ui,sans-serif;text-align:center;padding:48px 20px">
+  <h2>Returning to the app…</h2>
+  <p id="msg">One moment.</p>
+  <p>
+    <a id="open" href="#"
+       style="display:inline-block;padding:12px 20px;background:#1b5e3f;color:#fff;border-radius:8px;text-decoration:none">
+      Open LWCC Companion
+    </a>
+  </p>
+  <script>
+    // SMART-on-FHIR redirect bridge for the LWCC Injured Worker Companion native app.
+    // Epic completes redirects only to https URLs, not custom schemes. Epic redirects
+    // here with ?code=...&state=...; we forward the EXACT query into the app's lwcc://
+    // scheme (intent:// on Android, where Custom Tabs blocks bare custom-scheme nav).
+    (function () {
+      var qs = window.location.search || "";
+      var android = /Android/i.test(navigator.userAgent);
+      var target = android
+        ? "intent://redirect" + qs + "#Intent;scheme=lwcc;package=com.psadvisory.lwcccompanion;end"
+        : "lwcc://redirect" + qs;
+
+      var p = new URLSearchParams(qs);
+      document.getElementById("open").setAttribute("href", target);
+      // Presence flags only (never the values) so the redirect test can verify fidelity.
+      document.getElementById("msg").textContent =
+        "code:" + p.has("code") + " state:" + p.has("state") +
+        (p.has("error") ? " error:" + p.get("error") : "");
+
+      // Auto-forward. On device the auth session intercepts the lwcc:// navigation and
+      // closes the sheet. Desktop browsers usually block this — use the button above.
+      window.location.replace(target);
+    })();
+  </script>
+</body>
+</html>
