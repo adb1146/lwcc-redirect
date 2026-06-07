@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LWCC Injured Worker Companion — Privacy Policy</title>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; color: #14241c; line-height: 1.55; }
+    h1 { color: #1b5e3f; } h2 { color: #1b5e3f; margin-top: 1.6em; }
+    .muted { color: #5c6b63; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <h1>Privacy Policy — LWCC Injured Worker Companion</h1>
+  <p class="muted">Last updated: June 2026. This app is a proof-of-concept by PS Advisory for LWCC.</p>
+
+  <p>The LWCC Injured Worker Companion ("the app") lets an injured worker connect their own medical
+  record through their health system's secure sign-in (SMART on FHIR / Epic MyChart) and view their
+  diagnoses, medications, lab results, allergies, and immunizations, with optional plain-language
+  explanations and a document scanner.</p>
+
+  <h2>Current build (beta / TestFlight)</h2>
+  <p>This beta connects to Epic's public <strong>FHIR sandbox</strong>. Testers sign in as a demo
+  patient and see test data — <strong>not real patient records</strong>.</p>
+
+  <h2>What the app accesses</h2>
+  <ul>
+    <li><strong>Health record data</strong> from your health system, only after you sign in and explicitly approve which categories the app may see. This is shown to you in the app; it is not sold or shared.</li>
+    <li><strong>Camera / photo library</strong> (only when you choose to scan a document), to read a photographed work note, bill, or form.</li>
+  </ul>
+
+  <h2>Authentication &amp; storage</h2>
+  <p>Sign-in uses OAuth 2.0 with PKCE. Access tokens are stored only in the device's secure storage
+  (iOS Keychain) and are never sent to us. We do not have a server that stores your health record.</p>
+
+  <h2>AI features</h2>
+  <p>The "Explain" and "Scan a document" features send the minimum necessary clinical values (or the
+  document image you chose) to a secure server-side proxy that calls an AI model to generate a
+  plain-language explanation. Only de-identified clinical values are sent for "Explain" (no name, date
+  of birth, or medical record number). No personal health information is logged.</p>
+
+  <h2>Data we do not collect</h2>
+  <p>The app contains no third-party advertising or analytics SDKs. We do not sell personal data.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy: <a href="mailto:abartels@psadvisory.com">abartels@psadvisory.com</a> (PS Advisory).</p>
+</body>
+</html>
