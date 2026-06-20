@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FunTimes — Prospecting Game for Brokers</title>
+  <meta name="description" content="Gamify your daily prospecting. Log activity, build streaks, level up. No login, no backend — your data stays on your device." />
+  <style>
+    :root {
+      --bg: #0f1f17;
+      --panel: #16291e;
+      --panel-2: #1d3527;
+      --line: #28533c;
+      --green: #1b5e3f;
+      --green-bright: #2fae73;
+      --accent: #ffd166;
+      --text: #eaf3ee;
+      --muted: #9cb4a6;
+      --danger: #e2705a;
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(1200px 600px at 80% -10%, #1c3a2a 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 20px 16px 80px; }
+
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .logo {
+      width: 40px; height: 40px; border-radius: 11px;
+      background: linear-gradient(140deg, var(--green-bright), var(--green));
+      display: grid; place-items: center; font-size: 22px; box-shadow: var(--shadow);
+    }
+    .brand h1 { font-size: 20px; margin: 0; letter-spacing: .2px; }
+    .brand small { color: var(--muted); font-size: 12px; }
+
+    .rank-chip {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--panel); border: 1px solid var(--line);
+      padding: 8px 12px; border-radius: 999px;
+    }
+    .rank-chip .lvl { font-weight: 700; color: var(--accent); }
+    .rank-chip .pts { color: var(--muted); font-size: 13px; }
+
+    .grid { display: grid; gap: 14px; }
+    @media (min-width: 720px) { .grid.cols-3 { grid-template-columns: repeat(3, 1fr); } .grid.cols-2 { grid-template-columns: 1.3fr 1fr; } }
+
+    .card {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow);
+    }
+    .card h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 0 0 12px; }
+
+    /* stat cards */
+    .stat { text-align: center; }
+    .stat .num { font-size: 30px; font-weight: 800; line-height: 1; }
+    .stat .lbl { color: var(--muted); font-size: 12px; margin-top: 6px; text-transform: uppercase; letter-spacing: .6px; }
+    .stat .sub { color: var(--green-bright); font-size: 12px; margin-top: 4px; }
+
+    /* goal bar */
+    .goal-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .goal-top .now { font-size: 22px; font-weight: 800; }
+    .goal-top .target { color: var(--muted); font-size: 13px; }
+    .bar { height: 14px; background: var(--panel-2); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+    .bar > span { display: block; height: 100%; width: 0; border-radius: 999px;
+      background: linear-gradient(90deg, var(--green-bright), var(--accent)); transition: width .5s cubic-bezier(.2,.8,.2,1); }
+    .goal-edit { margin-top: 10px; display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 13px; }
+    .goal-edit input { width: 70px; }
+
+    /* activity buttons */
+    .acts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    @media (min-width: 520px) { .acts { grid-template-columns: repeat(3, 1fr); } }
+    .act {
+      cursor: pointer; user-select: none; border: 1px solid var(--line); background: var(--panel-2);
+      border-radius: 12px; padding: 12px 10px; text-align: center; transition: transform .06s, border-color .15s, background .15s;
+    }
+    .act:hover { border-color: var(--green-bright); }
+    .act:active { transform: scale(.96); }
+    .act .emoji { font-size: 24px; }
+    .act .name { font-size: 13px; margin-top: 4px; font-weight: 600; }
+    .act .pv { font-size: 11px; color: var(--accent); margin-top: 2px; }
+
+    /* wheel */
+    .wheel-box { text-align: center; }
+    .opener {
+      min-height: 84px; display: grid; place-items: center; padding: 14px;
+      background: var(--panel-2); border: 1px dashed var(--line); border-radius: 12px;
+      font-size: 15px; line-height: 1.4; transition: opacity .15s;
+    }
+    .opener.spinning { opacity: .35; }
+    .opener .tag { display: block; color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
+
+    /* log */
+    .log { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow: auto; }
+    .log li { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .log li:last-child { border-bottom: 0; }
+    .log .le { font-size: 18px; }
+    .log .lt { flex: 1; }
+    .log .lp { color: var(--accent); font-weight: 700; font-size: 13px; }
+    .log .ltime { color: var(--muted); font-size: 11px; }
+    .log .empty { color: var(--muted); text-align: center; padding: 24px; }
+
+    button.btn {
+      cursor: pointer; border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 700; font-size: 14px;
+      background: linear-gradient(140deg, var(--green-bright), var(--green)); color: #fff; box-shadow: var(--shadow);
+      transition: transform .06s, filter .15s;
+    }
+    button.btn:hover { filter: brightness(1.07); }
+    button.btn:active { transform: translateY(1px); }
+    button.btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--text); box-shadow: none; }
+    button.btn.small { padding: 6px 12px; font-size: 12.5px; }
+    input[type="number"] { background: var(--panel-2); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 6px 8px; }
+
+    .footer-actions { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+    .tiny { color: var(--muted); font-size: 12px; text-align: center; margin-top: 14px; line-height: 1.5; }
+    a { color: var(--green-bright); }
+
+    /* toast */
+    #toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px);
+      background: var(--panel-2); border: 1px solid var(--green-bright); color: var(--text);
+      padding: 12px 18px; border-radius: 12px; box-shadow: var(--shadow); opacity: 0; pointer-events: none;
+      transition: opacity .25s, transform .25s; font-weight: 600; z-index: 50; }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* confetti canvas */
+    #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 40; }
+  </style>
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">🎯</div>
+        <div>
+          <h1>FunTimes</h1>
+          <small>Make prospecting a game.</small>
+        </div>
+      </div>
+      <div class="rank-chip">
+        <span class="lvl" id="rankName">Rookie</span>
+        <span class="pts" id="rankPts">0 pts</span>
+      </div>
+    </header>
+
+    <!-- top stats -->
+    <div class="grid cols-3" style="margin-bottom:14px">
+      <div class="card stat">
+        <div class="num" id="streakNum">0</div>
+        <div class="lbl">Day Streak 🔥</div>
+        <div class="sub" id="streakSub">Start one today</div>
+      </div>
+      <div class="card stat">
+        <div class="num" id="weekNum">0</div>
+        <div class="lbl">Points This Week</div>
+        <div class="sub" id="weekSub">&nbsp;</div>
+      </div>
+      <div class="card stat">
+        <div class="num" id="allNum">0</div>
+        <div class="lbl">All-Time Points</div>
+        <div class="sub" id="nextSub">&nbsp;</div>
+      </div>
+    </div>
+
+    <div class="grid cols-2">
+      <!-- left column -->
+      <div class="grid">
+        <div class="card">
+          <h2>Today's Goal</h2>
+          <div class="goal-top">
+            <span class="now"><span id="goalNow">0</span> <span style="font-size:13px;color:var(--muted)">pts</span></span>
+            <span class="target">target <strong id="goalTargetLbl">50</strong></span>
+          </div>
+          <div class="bar"><span id="goalBar"></span></div>
+          <div class="goal-edit">
+            <label for="goalInput">Daily target</label>
+            <input type="number" id="goalInput" min="5" step="5" value="50" />
+            <button class="btn ghost small" id="saveGoal">Save</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Log an Activity</h2>
+          <div class="acts" id="acts"></div>
+        </div>
+      </div>
+
+      <!-- right column -->
+      <div class="grid">
+        <div class="card wheel-box">
+          <h2>Stuck? Spin an Opener</h2>
+          <div class="opener" id="opener"><span class="tag">your move</span>Hit “Spin” for a conversation starter.</div>
+          <div style="margin-top:12px"><button class="btn" id="spinBtn">🎡 Spin the wheel</button></div>
+        </div>
+
+        <div class="card">
+          <h2>Recent Activity</h2>
+          <ul class="log" id="log"><li class="empty">Nothing logged yet. Make your first move 👆</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <button class="btn ghost small" id="exportBtn">⬇︎ Export data</button>
+      <button class="btn ghost small" id="resetDay">Reset today</button>
+      <button class="btn ghost small" id="resetAll">Reset everything</button>
+    </div>
+    <p class="tiny">
+      100% private — everything lives in your browser's localStorage. No account, no server, nothing leaves your device.<br>
+      Built as a static page; host it anywhere (e.g. GitHub Pages).
+    </p>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // ---- Config ---------------------------------------------------------
+    var ACTIVITIES = [
+      { id: "call",    emoji: "📞", name: "Dial",         pts: 5   },
+      { id: "convo",   emoji: "💬", name: "Live convo",   pts: 10  },
+      { id: "email",   emoji: "✉️", name: "Email/DM",     pts: 2   },
+      { id: "meeting", emoji: "🤝", name: "Meeting set",  pts: 15  },
+      { id: "quote",   emoji: "📄", name: "Quote sent",   pts: 25  },
+      { id: "won",     emoji: "🏆", name: "Policy won!",  pts: 100 }
+    ];
+
+    var RANKS = [
+      { at: 0,    name: "Rookie" },
+      { at: 250,  name: "Dialer" },
+      { at: 750,  name: "Connector" },
+      { at: 2000, name: "Closer" },
+      { at: 5000, name: "Rainmaker" },
+      { at: 12000, name: "Legend" }
+    ];
+
+    var OPENERS = [
+      ["Referral angle", "“I help a few businesses near you with their coverage — mind if I ask who handles yours today?”"],
+      ["Curiosity", "“Quick one — when's the last time someone actually shopped your policy, not just renewed it?”"],
+      ["Value-first", "“I'm not calling to sell you anything today. I send a free 2-minute coverage gap check — want me to run yours?”"],
+      ["Pattern interrupt", "“I know I'm an interruption. Give me 19 seconds and you can decide if it's worth another minute.”"],
+      ["Renewal timing", "“When does your current policy renew? I like to look 60 days out so there's zero pressure.”"],
+      ["Peer proof", "“I just helped a business like yours trim their premium without dropping coverage — worth a look for you?”"],
+      ["Soft permission", "“Did I catch you at an okay moment, or should I grab two minutes later this week?”"],
+      ["Problem-led", "“A lot of owners I talk to don't realize they're underinsured until a claim. Can I do a quick sanity check on yours?”"],
+      ["The blunt one", "“I'll be honest — I'd love your business. Will you give me one shot to earn a quote at renewal?”"],
+      ["LinkedIn touch", "“Saw your post about growing the team — congrats. Growth usually changes your coverage needs; happy to flag what to watch.”"],
+      ["Reactivation", "“We talked a while back and the timing wasn't right. Has anything changed on your end since?”"],
+      ["The favor", "“Even if we never do business — who's the one person you'd want me to talk to who could use a sharper broker?”"]
+    ];
+
+    var KEY = "funtimes.v1";
+
+    // ---- State ----------------------------------------------------------
+    function todayKey(d) { d = d || new Date(); return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+
+    function load() {
+      var s;
+      try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) { s = null; }
+      if (!s || typeof s !== "object") s = {};
+      s.events = Array.isArray(s.events) ? s.events : [];
+      s.goal = s.goal || 50;
+      s.streak = s.streak || 0;
+      s.lastDay = s.lastDay || null;
+      return s;
+    }
+    function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+
+    var state = load();
+
+    // ---- Derived --------------------------------------------------------
+    function totalPoints() { return state.events.reduce(function (a, e) { return a + e.pts; }, 0); }
+    function pointsOn(dayK) { return state.events.reduce(function (a, e) { return a + (e.day === dayK ? e.pts : 0); }, 0); }
+    function pointsThisWeek() {
+      var now = new Date(); var day = now.getDay(); // 0 Sun
+      var monday = new Date(now); monday.setHours(0,0,0,0);
+      monday.setDate(now.getDate() - ((day + 6) % 7));
+      return state.events.reduce(function (a, e) { return a + (new Date(e.ts) >= monday ? e.pts : 0); }, 0);
+    }
+    function rankFor(pts) {
+      var r = RANKS[0], next = null;
+      for (var i = 0; i < RANKS.length; i++) {
+        if (pts >= RANKS[i].at) { r = RANKS[i]; next = RANKS[i+1] || null; }
+      }
+      return { cur: r, next: next };
+    }
+
+    // ---- Streak ---------------------------------------------------------
+    function refreshStreak() {
+      var t = todayKey();
+      if (state.lastDay === t) return; // already counted today via add()
+      var y = new Date(); y.setDate(y.getDate() - 1);
+      var yK = todayKey(y);
+      // If last active day isn't today or yesterday, streak is stale -> will reset on next activity.
+      if (state.lastDay && state.lastDay !== t && state.lastDay !== yK) {
+        // streak broken (shown as the stored number until they act; but reflect reality)
+        state.streak = 0;
+      }
+    }
+
+    // ---- Actions --------------------------------------------------------
+    function addActivity(act) {
+      var t = todayKey();
+      var y = new Date(); y.setDate(y.getDate() - 1);
+      var yK = todayKey(y);
+
+      if (state.lastDay === t) {
+        // same day, streak unchanged
+      } else if (state.lastDay === yK) {
+        state.streak += 1;
+      } else {
+        state.streak = 1;
+      }
+      state.lastDay = t;
+
+      state.events.unshift({ id: act.id, emoji: act.emoji, name: act.name, pts: act.pts, ts: Date.now(), day: t });
+      if (state.events.length > 500) state.events.length = 500;
+      save();
+
+      var msg = "+" + act.pts + " — " + act.name;
+      if (act.id === "won") { burst(220); toast("🏆 BOOM! Policy won. +" + act.pts); }
+      else toast(msg);
+
+      var before = goalReachedBefore;
+      render();
+      if (!before && goalReachedNow()) { burst(120); toast("🎉 Daily goal smashed!"); }
+    }
+
+    var goalReachedBefore = false;
+    function goalReachedNow() { return pointsOn(todayKey()) >= state.goal; }
+
+    // ---- Render ---------------------------------------------------------
+    function render() {
+      refreshStreak();
+      var tp = totalPoints();
+      var rk = rankFor(tp);
+      var todayPts = pointsOn(todayKey());
+
+      byId("rankName").textContent = rk.cur.name;
+      byId("rankPts").textContent = tp.toLocaleString() + " pts";
+
+      byId("streakNum").textContent = state.streak;
+      byId("streakSub").textContent = state.lastDay === todayKey()
+        ? "Active today ✔" : (state.streak ? "Don't break it!" : "Start one today");
+
+      byId("weekNum").textContent = pointsThisWeek().toLocaleString();
+      byId("allNum").textContent = tp.toLocaleString();
+      byId("nextSub").textContent = rk.next ? (rk.next.at - tp).toLocaleString() + " to " + rk.next.name : "Max rank 🐐";
+
+      byId("goalNow").textContent = todayPts;
+      byId("goalTargetLbl").textContent = state.goal;
+      byId("goalInput").value = state.goal;
+      var pct = Math.min(100, Math.round((todayPts / state.goal) * 100));
+      byId("goalBar").style.width = pct + "%";
+
+      goalReachedBefore = goalReachedNow();
+      renderLog();
+    }
+
+    function renderLog() {
+      var ul = byId("log");
+      if (!state.events.length) { ul.innerHTML = '<li class="empty">Nothing logged yet. Make your first move 👆</li>'; return; }
+      ul.innerHTML = "";
+      state.events.slice(0, 40).forEach(function (e) {
+        var li = document.createElement("li");
+        var time = new Date(e.ts);
+        li.innerHTML = '<span class="le">' + e.emoji + '</span>' +
+          '<span class="lt">' + escapeHtml(e.name) + ' <span class="ltime">· ' + fmtTime(time) + '</span></span>' +
+          '<span class="lp">+' + e.pts + '</span>';
+        ul.appendChild(li);
+      });
+    }
+
+    // ---- Wheel ----------------------------------------------------------
+    var spinning = false;
+    function spin() {
+      if (spinning) return;
+      spinning = true;
+      var box = byId("opener");
+      box.classList.add("spinning");
+      var ticks = 0, max = 12 + Math.floor(Math.random() * 6);
+      var iv = setInterval(function () {
+        var pick = OPENERS[Math.floor(Math.random() * OPENERS.length)];
+        box.innerHTML = '<span class="tag">' + escapeHtml(pick[0]) + '</span>' + escapeHtml(pick[1]);
+        ticks++;
+        if (ticks >= max) {
+          clearInterval(iv);
+          box.classList.remove("spinning");
+          spinning = false;
+        }
+      }, 70 + Math.min(ticks, 0));
+    }
+
+    // ---- Utilities ------------------------------------------------------
+    function byId(id) { return document.getElementById(id); }
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]; }); }
+    function fmtTime(d) {
+      var h = d.getHours(), m = d.getMinutes(), ap = h >= 12 ? "pm" : "am";
+      h = h % 12; if (h === 0) h = 12;
+      return h + ":" + pad(m) + ap;
+    }
+
+    var toastT;
+    function toast(msg) {
+      var el = byId("toast"); el.textContent = msg; el.classList.add("show");
+      clearTimeout(toastT); toastT = setTimeout(function () { el.classList.remove("show"); }, 2200);
+    }
+
+    // ---- Confetti -------------------------------------------------------
+    var cv = byId("confetti"), cx = cv.getContext("2d"), parts = [], raf = null;
+    function sizeCanvas() { cv.width = innerWidth; cv.height = innerHeight; }
+    sizeCanvas(); addEventListener("resize", sizeCanvas);
+    function burst(n) {
+      var colors = ["#2fae73", "#ffd166", "#eaf3ee", "#1b5e3f", "#e2705a"];
+      for (var i = 0; i < n; i++) {
+        parts.push({ x: innerWidth/2, y: innerHeight*0.3, vx: (Math.random()-0.5)*9, vy: Math.random()*-9-3,
+          g: 0.22, s: 4 + Math.random()*5, c: colors[i % colors.length], a: 1, r: Math.random()*6 });
+      }
+      if (!raf) raf = requestAnimationFrame(tick);
+    }
+    function tick() {
+      cx.clearRect(0,0,cv.width,cv.height);
+      for (var i = parts.length - 1; i >= 0; i--) {
+        var p = parts[i];
+        p.vy += p.g; p.x += p.vx; p.y += p.vy; p.a -= 0.008; p.r += 0.2;
+        if (p.a <= 0 || p.y > cv.height + 20) { parts.splice(i, 1); continue; }
+        cx.save(); cx.globalAlpha = Math.max(0, p.a); cx.translate(p.x, p.y); cx.rotate(p.r);
+        cx.fillStyle = p.c; cx.fillRect(-p.s/2, -p.s/2, p.s, p.s); cx.restore();
+      }
+      if (parts.length) raf = requestAnimationFrame(tick); else { raf = null; cx.clearRect(0,0,cv.width,cv.height); }
+    }
+
+    // ---- Build activity buttons ----------------------------------------
+    (function buildActs() {
+      var c = byId("acts");
+      ACTIVITIES.forEach(function (a) {
+        var d = document.createElement("div");
+        d.className = "act"; d.setAttribute("role", "button"); d.tabIndex = 0;
+        d.innerHTML = '<div class="emoji">' + a.emoji + '</div><div class="name">' + a.name + '</div><div class="pv">+' + a.pts + '</div>';
+        d.addEventListener("click", function () { addActivity(a); });
+        d.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); addActivity(a); } });
+        c.appendChild(d);
+      });
+    })();
+
+    // ---- Wire up --------------------------------------------------------
+    byId("spinBtn").addEventListener("click", spin);
+    byId("saveGoal").addEventListener("click", function () {
+      var v = parseInt(byId("goalInput").value, 10);
+      if (!v || v < 5) v = 5;
+      state.goal = v; save(); render(); toast("Goal set to " + v + " pts/day");
+    });
+    byId("exportBtn").addEventListener("click", function () {
+      var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = "funtimes-data-" + todayKey() + ".json"; a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 500);
+    });
+    byId("resetDay").addEventListener("click", function () {
+      if (!confirm("Clear today's logged activity? Streak and history stay.")) return;
+      var t = todayKey();
+      state.events = state.events.filter(function (e) { return e.day !== t; });
+      save(); render(); toast("Today reset");
+    });
+    byId("resetAll").addEventListener("click", function () {
+      if (!confirm("Wipe ALL data — points, streak, history? This cannot be undone.")) return;
+      localStorage.removeItem(KEY); state = load(); render(); toast("Fresh start 🌱");
+    });
+
+    render();
+  })();
+  </script>
+</body>
+</html>
